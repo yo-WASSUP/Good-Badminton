@@ -72,11 +72,22 @@ class StatsVisualizer:
         }
 
     def _find_chinese_font(self):
+        # 项目根目录自带的 simhei.ttf（跨平台优先使用）
+        project_font = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "..", "..", "simhei.ttf"
+        )
         font_paths = [
+            project_font,
+            # Windows 字体
             "C:/Windows/Fonts/simhei.ttf",
             "C:/Windows/Fonts/simsun.ttc",
             "C:/Windows/Fonts/simkai.ttf",
             "C:/Windows/Fonts/msyh.ttc",
+            # Linux / WSL 常见中文字体
+            "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/arphic/uming.ttc",
         ]
         for path in font_paths:
             if os.path.exists(path):
