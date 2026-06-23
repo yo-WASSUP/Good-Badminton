@@ -85,7 +85,11 @@ def process_video_with_audio(video_path, temp_video_path, output_path, save_dir)
                 "-i",
                 video_path,
                 "-c:v",
-                "copy",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "faststart",
                 "-c:a",
                 "aac",
                 "-map",
@@ -97,7 +101,7 @@ def process_video_with_audio(video_path, temp_video_path, output_path, save_dir)
             ],
             stderr=subprocess.DEVNULL,
             stdout=subprocess.DEVNULL,
-            timeout=120,
+            timeout=300,
         )
 
         if result.returncode != 0 or not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
@@ -119,7 +123,30 @@ def process_video_without_audio(temp_video_path, output_path):
         if not os.path.exists(temp_video_path):
             raise FileNotFoundError(f"Temporary video not found: {temp_video_path}")
 
-        shutil.copy2(temp_video_path, output_path)
+        # 用 ffmpeg 转成 H.264，保证浏览器 / VSCode / 网页播放器都能直接播放
+        result = subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-i",
+                temp_video_path,
+                "-c:v",
+                "libx264",
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "faststart",
+                output_path,
+            ],
+            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            timeout=300,
+        )
+
+        if result.returncode != 0 or not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+            # 转码失败时回退为直接复制，至少保留可用产物
+            print("H.264 转码失败，回退为直接复制原始编码。")
+            shutil.copy2(temp_video_path, output_path)
 
         if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
             raise RuntimeError("Output video was not created")
